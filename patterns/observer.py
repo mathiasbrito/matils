@@ -54,7 +54,7 @@ class Observable:
 
     def __init__(self):
         """Initialize the Observers list."""
-        self.observers: Dict[str, List[Callable[[str, Dict], None]]] = dict()
+        self._observers: Dict[str, List[Callable[[str, Dict], None]]] = dict()
         """
         This attributes keeps a dictionary containing Observable events and the
         assciated callbacks. Observers registered without specifying a
@@ -70,7 +70,12 @@ class Observable:
             }
         """
 
-        self.observers['all'] = list()  # initializes the global event list
+        self._observers['all'] = list()  # initializes the global event list
+
+    @property
+    def observers(self):
+        """:attr:Observable._observers getter."""
+        return self._observers
 
     def register(self, observer: Observer, event: str="all"):
         """
@@ -86,12 +91,12 @@ class Observable:
         ignored and the request will be considered successful.
         """
         try:
-            if observer not in self.observers[event] or \
-               observer not in self.observers['all']:
-                self.observers[event].append(observer)
+            if observer not in self._observers[event] or \
+               observer not in self._observers['all']:
+                self._observers[event].append(observer)
         except KeyError:
             observers = [observer]
-            self.observers[event] = observers
+            self._observers[event] = observers
 
     def unregister(self, observer: Observer, event: str="all"):
         """
@@ -112,7 +117,7 @@ class Observable:
         if event == 'all':
             # Now we need to find every reference to the observer
             found = False
-            for event, observers in self.observers.items():
+            for event, observers in self._observers.items():
                 if observer in observers:
                     observers.remove(observer)
                     found = True
@@ -122,8 +127,8 @@ class Observable:
                 return False
         else:
             try:
-                if observer in self.observers[event]:
-                    self.observers[event].remove(observer)
+                if observer in self._observers[event]:
+                    self._observers[event].remove(observer)
                     return True
                 else:
                     return False  # Element Not Found...
@@ -140,8 +145,8 @@ class Observable:
         The reference to the original dictionary object is kept and the 'all'
         entry are kept...
         """
-        self.observers.clear()
-        self.observers['all'] = list()
+        self._observers.clear()
+        self._observers['all'] = list()
 
     def notify(self, data: Any, event: str):
         """
@@ -160,11 +165,11 @@ class Observable:
         event in the same :class:=`Observable`, if you do so in your code you
         will get notified more than once!
         """
-        for observer in self.observers['all']:
+        for observer in self._observers['all']:
             observer.update(data, event)
 
-        if event in self.observers.keys():
-            for observer in self.observers[event]:
+        if event in self._observers.keys():
+            for observer in self._observers[event]:
                 observer.update(data, event)
         else:
             pass  # nobody registered...
