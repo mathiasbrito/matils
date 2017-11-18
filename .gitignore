@@ -5,3 +5,8 @@
 *.pyc
 *.egg-info/
 __pycache__
+build
+
+examples
+
+.DS_Store
