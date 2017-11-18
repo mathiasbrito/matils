@@ -1,0 +1,8 @@
+
+
+Subpackages
+-----------
+
+.. toctree::
+
+    matils.patterns
