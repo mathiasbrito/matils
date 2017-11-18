@@ -12,5 +12,6 @@ setup(
     description='Collection of utilities using only the Python Standard \
                  Library',
     url='https://github.com/mathiasbrito/matils',
+    test_suit='tests',
     packages=find_packages()
 )

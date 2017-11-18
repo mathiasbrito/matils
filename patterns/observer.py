@@ -6,7 +6,7 @@ It provides both the Observer and Observable classes that you must use to
 derive your classes.
 """
 
-from typing import Dict, Any
+from typing import Dict, List, Callable, Any
 from abc import ABC, abstractmethod
 
 
@@ -54,8 +54,7 @@ class Observable:
 
     def __init__(self):
         """Initialize the Observers list."""
-        self.observers = Dict[str, [Observer(str, Dict)]]
-        self.observers['all'] = list()  # initializes the global event list
+        self.observers: Dict[str, List[Callable[[str, Dict], None]]] = dict()
         """
         This attributes keeps a dictionary containing Observable events and the
         assciated callbacks. Observers registered without specifying a
@@ -70,6 +69,8 @@ class Observable:
                 "state": [observer3]
             }
         """
+
+        self.observers['all'] = list()  # initializes the global event list
 
     def register(self, observer: Observer, event: str="all"):
         """
@@ -110,19 +111,37 @@ class Observable:
         """
         if event == 'all':
             # Now we need to find every reference to the observer
+            found = False
             for event, observers in self.observers.items():
                 if observer in observers:
                     observers.remove(observer)
-            return True
+                    found = True
+            if found:
+                return True
+            else:
+                return False
         else:
             try:
-                if observer in observers[event]:
-                    observers[event].remove(observer)
+                if observer in self.observers[event]:
+                    self.observers[event].remove(observer)
                     return True
                 else:
                     return False  # Element Not Found...
             except KeyError:
                 return False  # Event not found...
+
+    def reset(self):
+        """
+        Remove all registered observers.
+
+        Clean :attr:`Observable.observers`. This means that the attribute
+        after a reset, must be exactly as it was when the obect was created.
+
+        The reference to the original dictionary object is kept and the 'all'
+        entry are kept...
+        """
+        self.observers.clear()
+        self.observers['all'] = list()
 
     def notify(self, data: Any, event: str):
         """
