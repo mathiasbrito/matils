@@ -16,6 +16,6 @@ matils package
     :show-inheritance:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    modules
