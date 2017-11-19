@@ -1,5 +1,12 @@
 language: python
 python:
-  - "3.6"
+- '3.6'
 script:
-  - python -m unittest -v
+- python -m unittest discover -v
+deploy:
+  provider: pypi
+  user: mathiasbrito
+  password:
+    secure: wz26IvnY5EBw6sf91Mi+yxhXEICdYfOnWFiVA9Fn9v8YABMshbTmpqmqD4ogehBrCUKWXbzUZGRCMsvVtRf5DCa4jJ8h8+Db/Rm5BBh38A2mPRI5H1rKJyxPbJIHtJXt18SJ/i9fETqYAaK4QdLEuhdx39VmQmnnTOqGqHX7K5FzUAkLeFX/sl+0pCpmBYSjUrwKRu8T0+VZHeO73DZuQNABhkqlzkhJE+EpeKLIOtLGrH87LHwt0SS41/yvVJrih5y8vdf401EJGRSpcdE3CgLIudWidTRwGg6jWBc5LEYK6WQBex6QzqL5hU5VBbU5OGboEHSXpGpHrMS3A2TzNi8Ls1mnpE09WdTP4nD4giyTsdffVGZq0HJnS8et1XnjUZTjGRViTkmWvuKbaF0c66HzAN/SJArGgjHmr/MP0KIQEUbBK6ICHrUUyuHwa3BpthZzHeSifSCD23HkzP4y4vTaeAHdsUlDhCt3f4JsMT66K13JgYs+Zn8nJxAPZcMwTqh9Q5orsI2ueV49+J+84MdfMCohvlCttTmY0j6WdJDEMgAet80fPyfiXEZU6M13nPBLmf+7ScG7gK+XIucr/Lxt8jIIVtKpQ4O8+qkl3KS1Ss7w1eUKL5Dk1I9ippsnsEjVQj71ySVN6eME67MLUEX8fuZhFrAyJPbN9BVXWZw=
+  on:
+    branch: master
