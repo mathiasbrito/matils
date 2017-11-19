@@ -2,7 +2,7 @@
 
 from unittest import mock
 from unittest import TestCase
-from patterns.observer import Observable, Observer
+from matils.patterns.observer import Observable, Observer
 
 
 class DummyObserver(Observer):
