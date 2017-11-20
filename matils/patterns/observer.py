@@ -5,9 +5,9 @@ In this module you will find the necessary classes to use the Observer Pattern.
 It provides both the Observer and Observable classes that you must use to
 derive your classes.
 
-This Implementation allows you to observer general events acurred in a object
+This Implementation allows you to observe general events occurred in a object
 that extends the :class:`Observable` class. To do that you need to implement
-the interface :class:`Observer` in your class and register it againts the
+the interface :class:`Observer` in your class and register it against the
 Observable that you want to track. Below an usage example, let's say that we
 have an Observable reading values from sensors, and notify observers for new
 values, the Observable code is shown below:
@@ -42,9 +42,9 @@ is done in the sensors. For that we implement the following observer:
 
 .. code-block:: python
 
-    class SensorDataAnalizer(Observer):
+    class SensorDataAnalyzer(Observer):
         def update(self, sensor_data, event_name):
-            print('Sensor data observerd, I will do some nice analysis from '
+            print('Sensor data observed, I will do some nice analysis from '
                   'received data type: {}, data: {}'.format(event_name,
                                                             str(sensor_data)))
 
@@ -54,7 +54,7 @@ In our main code we have:
 
     if __name__ == '__main__':
         sensors_reader = SensorsReader()
-        sensors_analyzer = SensorDataAnalizer()
+        sensors_analyzer = SensorDataAnalyzer()
 
         sensors_reader.register(sensors_analyzer, 'temperature')
         sensors_reader.register(sensors_analyzer, 'humidity')
@@ -66,13 +66,13 @@ After you implement your observer you can register it in Observables, let's
 take the following :class:`Observable`
 """
 
-from typing import Dict, List, Callable, Any
+from typing import Union, Dict, List, Any
 from abc import ABC, abstractmethod
 
 
 class Observer(ABC):
     """
-    Intended to be implemented if the objects are whiling to observe.
+    Intended to be implemented if the objects are wiling to observe.
 
     If your class wants to observe an :class:`Observable`, needs to implement
     this abstract class.
@@ -89,8 +89,8 @@ class Observer(ABC):
     """
 
     @abstractmethod
-    def update(self, data: Any, event: str="all"):
-        """To be called by an Observable if object is registered."""
+    def update(self, data: Any, event: str):
+        """To be called by an :class:`Observable` to notified the Observer."""
         pass
 
 
@@ -99,7 +99,7 @@ class Observable:
     The changes in a Observable object can be observed by Observer classes.
 
     The Observable manages a list of observers and have to make sure that all
-    registered observers will be notifyed when the status of one of the
+    registered observers will be notified when the status of one of the
     observed attributes change.
 
     One characteristic of this implementation is that Observers need to inform
@@ -114,10 +114,10 @@ class Observable:
 
     def __init__(self):
         """Initialize the Observers list."""
-        self._observers: Dict[str, List[Callable[[str, Dict], None]]] = dict()
+        self._observers: Dict[str, List[Observer]] = dict()
         """
         This attributes keeps a dictionary containing Observable events and the
-        assciated callbacks. Observers registered without specifying a
+        associated callbacks. Observers registered without specifying a
         event name are associated to the key "all" in the dictionary.
 
         As an example, in a given point in time the self.observers property
@@ -137,63 +137,71 @@ class Observable:
         """:attr:Observable._observers getter."""
         return self._observers
 
-    def register(self, observer: Observer, event: str="all"):
+    def register(self, observer: Observer, to: Union[str, List[str]]="all"):
         """
         Register an observer to listen to events from this Observable.
 
-        This function manipulates the attribute self.obseervers by addying the
-        'observer' to the list in the right entry taking into consideration
-        the event of interest. If 'all' is given to the parameter 'event', than
-        the observer MUST be inserted in the 'all' entry of self.observers.
+        This function manipulates the attribute :attr:`Observer._observers by
+        adding the 'observer' to the list in the right entry taking into
+        consideration the events of interest. If 'all' is given to the
+        parameter 'event', than the observer MUST be inserted in the 'all'
+        entry of :attr:`Observer._observers`.
+
+        The method can receive the events of interest as s string,
+        for a single event or a list of strings for register multiple events
+        in the same call.
 
         If an observer is already registered to observe to all events, if a
         request to observe an specific event arrive, the request will be
         ignored and the request will be considered successful.
         """
-        try:
-            if observer not in self._observers[event] or \
-               observer not in self._observers['all']:
-                self._observers[event].append(observer)
-        except KeyError:
-            observers = [observer]
-            self._observers[event] = observers
+        if type(to) == str:
+            events = [to]
+        else:
+            events = to
 
-    def unregister(self, observer: Observer, event: str="all"):
+        for event in events:
+            try:
+                if observer not in self._observers[event] or \
+                   observer not in self._observers['all']:
+                    self._observers[event].append(observer)
+            except KeyError:
+                observers = [observer]
+                self._observers[event] = observers
+
+    def unregister(self,
+                   observer: Observer,
+                   from_events: Union[str, List[str]]="all"):
         """
-        Unregister an observer, to all or specifc events.
+        Unregister an observer, to all or specific events.
 
         This method will unregister an observer, the default behavior is to
-        unregister from all events. If a event name is given it will be
-        unregistered only from the specified event.
+        unregister from all events. If an event name or a list of events is
+        given it will be unregistered only from the/those specified event(s).
 
-        The unregistering process is done by manipulting the 'self.observers'
-        removing the entries to the given observer from the different events
-        lists.
-
-        :return: True if the unregistration was successful, and False if the
-                 unregistration failed, or no action was taken (maybe observer
-                 not registered).
+        The unregistered process is done by manipulating the
+        :attr:`Onservable.observers` removing the entries to the given
+        observer from the different events lists.
         """
-        if event == 'all':
-            # Now we need to find every reference to the observer
-            found = False
-            for event, observers in self._observers.items():
-                if observer in observers:
-                    observers.remove(observer)
-                    found = True
-            if found:
-                return True
-            else:
-                return False
+        if type(from_events) == str:
+            events = [from_events]
         else:
-            try:
-                if observer in self._observers[event]:
-                    self._observers[event].remove(observer)
-                    return True
-                else:
-                    return False  # Element Not Found...
-            except KeyError:
-                return False  # Event not found...
+            events = from_events
+
+        for event in events:
+            if event == 'all':
+                # Now we need to find every reference to the observer
+                for registered_event, observers in self._observers.items():
+                    if observer in observers:
+                        observers.remove(observer)
+            else:
+                try:
+                    if observer in self._observers[event]:
+                        self._observers[event].remove(observer)
+                    else:
+                        continue  # Element Not Found...
+                except KeyError:
+                    continue  # Event not found...
 
     def reset(self):
         """
