@@ -89,7 +89,7 @@ class Observer(ABC):
     """
 
     @abstractmethod
-    def update(data: Any, event: str="all"):
+    def update(self, data: Any, event: str="all"):
         """To be called by an Observable if object is registered."""
         pass
 
