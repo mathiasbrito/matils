@@ -3,6 +3,9 @@
 import zmq
 import random
 import asyncio
+import zmq.asyncio
+
+from typing import Any
 
 from matils.patterns.zmq_observer import ZMQObserver
 from matils.patterns.observer import Observable
@@ -12,9 +15,11 @@ class SensorsReader(Observable):
     """Simulate a sensor reader."""
 
     def __init__(self, zmq_ep, zmq_context=None):
-        """Initilize the observer with ZMQ related variables."""
+        """Initialize the observer with ZMQ related variables."""
+        super().__init__()
+
         if zmq_context is None:
-            self.zmq_context = zmq.Context()
+            self.zmq_context = zmq.asyncio.Context()
         else:
             self.zmq_context = zmq_context
 
@@ -26,51 +31,51 @@ class SensorsReader(Observable):
         while True:
             # reads new sensors data each 2 seconds.
             temperature_data = self.get_temperature()
-            self.socket.send_multipart([b'temperature', str(temperature_data)
-                                        .encode()])
+            await self.notify(temperature_data, 'sensors.temperature')
 
             humidity_data = self.get_humidity()
-            self.socket.send_multipart([b'humidity', str(humidity_data)
-                                        .encode()])
-            print("Sent")
+            await self.notify(humidity_data, 'sensors.humidity')
+
             await asyncio.sleep(1)
 
-    def get_temperature(self):
-        """Generate a radom value for temperature."""
+    @staticmethod
+    def get_temperature():
+        """Generate a random value for temperature."""
         # return some Random Value between 0-40
         return {'value': random.uniform(0, 40)}
 
-    def get_humidity(self):
+    @staticmethod
+    def get_humidity():
         """Generate a random value for humidity."""
         # return a random value between 20-100
         return {'value': random.uniform(20, 100)}
 
-    def notify():
+    async def notify(self, data, event):
         """Overwrite notify to send data via ZMQ."""
-        pass
+        await self.socket.send_multipart([event.encode(), str(data).encode()])
 
 
-class SensorDataAnalizer(ZMQObserver):
+class SensorDataAnalyzer(ZMQObserver):
     """A Dummy sensor analyzer."""
 
-    def update(self, sensor_data, event_name):
+    def update(self, data: Any, event: str="all"):
         """Execute upon new data."""
-        print('Sensor data observerd, I will do some nice analysis from '
-              'received data type: {}, data: {}'.format(event_name,
-                                                        str(sensor_data)))
+        print('Sensor data observed, I will do some nice analysis from '
+              'received data type: {}, data: {}'.format(event, data))
 
 
 if __name__ == '__main__':
-    endpoint = "inproc://test"
+    endpoint = "tcp://127.0.0.1:5555"
     sensors_reader = SensorsReader(endpoint)
-    sensors_analyzer = SensorDataAnalizer(endpoint, 'temperature',
+    sensors_analyzer = SensorDataAnalyzer(endpoint, ['sensors.temperature',
+                                                     'sensors.humidity'],
                                           zmq_context=sensors_reader.
                                           zmq_context)
 
+    event_loop = asyncio.get_event_loop()
+    tasks = asyncio.gather(sensors_reader.read_sensors_data_loop(),
+                           sensors_analyzer.listen())
     try:
-        event_loop = asyncio.get_event_loop()
-        tasks = asyncio.gather(sensors_reader.read_sensors_data_loop(),
-                               sensors_analyzer.listen())
         event_loop.run_until_complete(tasks)
     except KeyboardInterrupt:
         event_loop.close()

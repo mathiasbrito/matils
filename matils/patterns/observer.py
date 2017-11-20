@@ -133,7 +133,7 @@ class Observable:
         self._observers['all'] = list()  # initializes the global event list
 
     @property
-    def observers(self):
+    def observers(self) -> Dict[str, List[Observer]]:
         """:attr:Observable._observers getter."""
         return self._observers
 

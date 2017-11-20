@@ -8,7 +8,7 @@ from matils.patterns.observer import Observable, Observer
 class DummyObserver(Observer):
     """A dummy observer to be used in Observable tests."""
 
-    def update(data, event='all'):
+    def update(self, data, event='all'):
         """Act as a dummy update method."""
         pass
 
@@ -32,7 +32,7 @@ class TestObservable(TestCase):
         # assert property type...
         self.assertIsInstance(observable.observers, dict)
 
-        # assert presence of key all with a blak list as value
+        # assert presence of key all with a blank list as value
         self.assertTrue('all' in observable.observers.keys())
         self.assertIsInstance(observable.observers['all'], list)
         self.assertEqual(len(observable.observers['all']), 0)
@@ -45,8 +45,9 @@ class TestObservable(TestCase):
             * The default value for the event name must be 'all'
             * If no event name is given, register the observable in the list
               at key 'all' in the :attr:`Observable.observers`
-            * If given an event name, register observable in the list at key
-              '<event_name>': key IS the string given as event parameter.
+            * If given an list of event names, register observable in the list
+              at key '<event_name>': for each event name in the events
+              list. key IS the string given as event parameter.
             * If it is the first observer to register to a given event, create
               the entry in the :attr:`Observable.observers` dictionary.
         """
@@ -65,6 +66,15 @@ class TestObservable(TestCase):
         self.assertTrue('what_a_nice_event' in observable.observers.keys())
         self.assertEqual(len(observable.observers['what_a_nice_event']), 1)
 
+        # test registration of multiple events to one observer in the same call
+        dummy = DummyObserver()
+        observable.register(dummy, ['event1', 'event2', 'event3'])
+        self.assertTrue({'event1', 'event2', 'event3'}.issubset(
+            observable.observers.keys()))
+        self.assertTrue(dummy in observable.observers['event1'])
+        self.assertTrue(dummy in observable.observers['event2'])
+        self.assertTrue(dummy in observable.observers['event3'])
+
     def test_unregister(self):
         """
         Test :meth:`Observable.unregister`.
@@ -75,35 +85,26 @@ class TestObservable(TestCase):
               registered, if no event name is given as second argument.
             * If a event name is given as second argument, remove the reference
               to the observer ONLY from the list of observers to that event.
-            * Return true if the requested operation was successful
-            * Return false if the given event or observer was not found
         """
         observable = Observable()
 
         # Register multiple times the same dummy observer...
         dummy1 = DummyObserver()
-        observable.register(dummy1)
-        observable.register(dummy1, 'shit_event')
-        observable.register(dummy1, 'not_again')
+        observable.register(dummy1, ['shit_event', 'not_again', 'ok'])
 
         # Remove an observer from a given event...
-        result = observable.unregister(dummy1, 'shit_event')
-        self.assertTrue(result)
+        observable.unregister(dummy1, 'shit_event')
         self.assertEqual(len(observable.observers['shit_event']), 0)
 
+        # Remove observer from a list of events...
+        observable.unregister(dummy1, ['not_again', 'ok'])
+        self.assertEqual(len(observable.observers['not_again']), 0)
+        self.assertEqual(len(observable.observers['ok']), 0)
+
         # Remove an observer from all events, by not giving an event name...
-        result = observable.unregister(dummy1)
-        self.assertTrue(result)
+        observable.unregister(dummy1)
         self.assertEqual(len(observable.observers['all']), 0)
         self.assertEqual(len(observable.observers['not_again']), 0)
-
-        # Checks if return false for an inexistent event...
-        result = observable.unregister(dummy1, 'I_do_not_exist')
-        self.assertFalse(result)
-
-        # Checks if return false if ask for removal of inexistent observer...
-        result = observable.unregister(DummyObserver())
-        self.assertFalse(result)
 
     def test_notify(self):
         """
@@ -140,8 +141,8 @@ class TestObservable(TestCase):
 
             mock_update.reset_mock()
             observable = Observable()
-            observable.register(DummyObserver, 'de_novo')
-            observable.register(DummyObserver, 'again')
+            observable.register(DummyObserver(), 'de_novo')
+            observable.register(DummyObserver(), 'again')
             observable.notify(data, event)
             # expected no calls to update since 'all' is clean and the event
             # is not registered...
