@@ -10,3 +10,4 @@ build
 examples
 
 .DS_Store
+.idea
