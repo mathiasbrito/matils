@@ -6,6 +6,6 @@ the implementation of Design Patterns.
 
 Enjoy!
 
-## List of Matilities!
+## List of Utilities!
 
     * Observer/Observable Pattern

@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='matils',
-    version='0.1',
+    version='0.1.1',
     author='Mathias Santos de Brito',
     author_email='mathias.brito@me.com',
     maintainer='Mathias Santos de Brito',

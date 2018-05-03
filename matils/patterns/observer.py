@@ -66,7 +66,6 @@ After you implement your observer you can register it in Observables, let's
 take the following :class:`Observable`
 """
 
-from typing import Dict, List, Callable, Any
 from abc import ABC, abstractmethod
 
 
@@ -89,7 +88,7 @@ class Observer(ABC):
     """
 
     @abstractmethod
-    def update(data: Any, event: str="all"):
+    def update(self, data, event="all"):
         """To be called by an Observable if object is registered."""
         pass
 
@@ -114,7 +113,7 @@ class Observable:
 
     def __init__(self):
         """Initialize the Observers list."""
-        self._observers: Dict[str, List[Callable[[str, Dict], None]]] = dict()
+        self._observers = dict()
         """
         This attributes keeps a dictionary containing Observable events and the
         assciated callbacks. Observers registered without specifying a
@@ -137,7 +136,7 @@ class Observable:
         """:attr:Observable._observers getter."""
         return self._observers
 
-    def register(self, observer: Observer, event: str="all"):
+    def register(self, observer, event='all'):
         """
         Register an observer to listen to events from this Observable.
 
@@ -158,7 +157,7 @@ class Observable:
             observers = [observer]
             self._observers[event] = observers
 
-    def unregister(self, observer: Observer, event: str="all"):
+    def unregister(self, observer, event="all"):
         """
         Unregister an observer, to all or specifc events.
 
@@ -208,7 +207,7 @@ class Observable:
         self._observers.clear()
         self._observers['all'] = list()
 
-    def notify(self, data: Any, event: str):
+    def notify(self, data, event):
         """
         Notify observers registered to be update about the event.
 
